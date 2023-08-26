@@ -12,7 +12,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-
     def get_fullname(self):
         '''return the full name of the user'''
         return self.fullname if self.fullname else self.staff_id if self.staff_id else 'Anonymous'  # noqa
@@ -26,3 +25,57 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'user'
+
+
+class Student(models.Model):
+    '''Model for creating and managing studnets'''
+    student_id = models.CharField(max_length=10)
+    student_name = models.CharField(max_length=200)
+    student_level = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.student_name
+
+
+class Course(models.Model):
+    '''Model for creating and managing courses'''
+    course_code = models.CharField(max_length=4)
+    course_name = models.CharField(max_length=200)
+    lecturer = models.ForeignKey(User, on_delete=models.CASCADE)
+    students = models.ManyToManyField(Student, related_name="studnets")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.course_code + " " + self.course_name
+
+
+class UniqueCode(models.Model):
+    '''Models for generating and storing unique attendance codes'''
+    def generate_code() -> str:
+        # generate randome unique code of 5 charactors (Letters and Numbers)
+        return "RandomCode"
+
+    code = models.CharField(max_length=5, default=generate_code)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    valid_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid() -> bool:
+        # check if the data, start time and end time are not passed
+        pass
+
+    def __str__(self) -> str:
+        return self.code
+
+
+class Attendance(models.Model):
+    '''Model for managing attendance'''
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    attendance_code = models.ForeignKey(UniqueCode, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.student.student_name
