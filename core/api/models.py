@@ -4,7 +4,7 @@ from .manager import AccountManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(max_length=100, unique=True)
+    staff_id = models.CharField(max_length=100, unique=True)
     fullname = models.CharField(max_length=100, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
@@ -15,11 +15,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_fullname(self):
         '''return the full name of the user'''
-        return self.fullname if self.fullname else self.email if self.email else 'Anonymous'  # noqa
+        return self.fullname if self.fullname else self.staff_id if self.staff_id else 'Anonymous'  # noqa
 
     objects = AccountManager()
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'staff_id'
 
     def __str__(self):
         return self.get_fullname()
