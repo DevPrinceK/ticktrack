@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .manager import AccountManager
 
+from django.utils.crypto import get_random_string
+from datetime import datetime, time, date
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     staff_id = models.CharField(max_length=100, unique=True)
@@ -52,9 +55,11 @@ class Course(models.Model):
 
 class UniqueCode(models.Model):
     '''Models for generating and storing unique attendance codes'''
+    
+    @staticmethod
     def generate_code() -> str:
-        # generate randome unique code of 5 charactors (Letters and Numbers)
-        return "RandomCode"
+        allowed_chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+        return get_random_string(length=5, allowed_chars=allowed_chars)
 
     code = models.CharField(max_length=5, default=generate_code)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -63,9 +68,16 @@ class UniqueCode(models.Model):
     end_time = models.TimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def is_valid() -> bool:
-        # check if the data, start time and end time are not passed
-        pass
+    def is_expired(self) -> bool:
+        # Check if the current date and time are within the valid range
+        current_datetime = datetime.now()
+        current_date = current_datetime.date()
+        current_time = current_datetime.time()
+        
+        if (current_date == self.valid_date) and (current_time >= self.start_time or current_time <= self.end_time ):
+            return False
+        else:
+            return True
 
     def __str__(self) -> str:
         return self.code
