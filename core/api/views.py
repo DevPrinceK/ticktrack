@@ -1,7 +1,8 @@
 # django
 from django.shortcuts import render
 from django.contrib.auth import login
-from api.serializers import LoginSerializer, UserSerializer
+from api.models import Course
+from api.serializers import CourseSerializer, UserSerializer
 
 # rest framework
 from rest_framework.views import APIView
@@ -21,10 +22,11 @@ class OverviewAPI(APIView):
         return Response({
             "message": "The API for TickTrack is running successfully",
             "endpoints": [
-                {"endpoint": "/", "description": "returns the overview of the entire api infrastructure"},
-                {"endpoint": "/login", "description": "used to login the user"},
-                {"endpoint": "/logout", "description": "used to logout the current user from the current device"},
-                {"endpoint": "/logoutall", "description": "used to logout current user from all devices"},
+                {"endpoint": "/", "description": "returns the overview of the entire api infrastructure"}, #noqa
+                {"endpoint": "/login", "description": "used to login the user"}, # noqa
+                {"endpoint": "/logout","description": "used to logout the current user from the current device"}, # noqa
+                {"endpoint": "/logoutall", "description": "used to logout current user from all devices"}, # noqa
+                {"endpoint": "/courses", "description": "Used to get, create, update and delete courses"}, # noqa
             ]
         })
 
@@ -42,6 +44,70 @@ class LoginAPI(KnoxLoginView):
         # Delete token - this will logout any other users using this account
         AuthToken.objects.filter(user=user).delete()
         return Response({
+            "message": "Login Successful",
             "user": UserSerializer(user).data,
             "token": AuthToken.objects.create(user)[1],
         }, status=status.HTTP_200_OK)
+
+
+class CRUDCourse(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        '''Used to get all courses created by user'''
+        courses = Course.objects.filter(lecturer=request.user)
+        return Response({
+            "courses": CourseSerializer(courses, many=True).data
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        '''Used to create a new course'''
+        course_code = request.data.get("course_code")
+        course_name = request.data.get("course_name")
+        obj = Course.objects.create(
+            course_code=course_code,
+            course_name=course_name,
+            lecturer=request.user
+        )
+        return Response({
+            "message": "Course Created Successfully",
+            "course": CourseSerializer(obj).data
+        }, status=status.HTTP_201_CREATED)
+        
+        
+    def put(self, request,*args, **kwargs):
+        '''Used to update a course'''
+        user = request.user
+        course_id = request.data.get("course_id")
+        course_code = request.data.get("course_code")
+        course_name = request.data.get("course_name")
+        obj = Course.objects.filter(id=course_id, lecturer=user).first()
+        # check of course exists
+        if obj is None:
+            return Response({
+                "message": "Course Fot Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        # check if course belongs to user
+        obj.course_code = course_code
+        obj.course_name = course_name
+        obj.save()
+        return Response({
+            "message": "Course Updated Successfully",
+            "course": CourseSerializer(obj).data
+        }, status=status.HTTP_200_OK)
+        
+    def delete(self, request, *args, **kwargs):
+        '''Used to delete a course'''
+        user = request.user
+        course_id = request.data.get("course_id")
+        obj = Course.objects.filter(id=course_id, lecturer=user).first()
+        # check of course exists
+        if obj is None:
+            return Response({
+                "message": "Course Fot Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        else:
+            obj.delete()
+            return Response({
+                "message": "Course Deleted Successfully",
+            }, status=status.HTTP_200_OK)
