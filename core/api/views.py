@@ -104,7 +104,7 @@ class CRUDCourse(APIView):
         # check of course exists
         if obj is None:
             return Response({
-                "message": "Course Fot Found"
+                "message": "Course Not Found"
             }, status=status.HTTP_404_NOT_FOUND)
         else:
             obj.delete()
@@ -164,17 +164,17 @@ class CRUDStudent(APIView):
         }, status=status.HTTP_200_OK)
         
     def delete(self, request, *args, **kwargs):
-        '''Used to delete a course'''
+        '''Used to delete a student'''
         user = request.user
-        course_id = request.data.get("course_id")
-        obj = Course.objects.filter(id=course_id, lecturer=user).first()
+        student_id = request.data.get("student_id")
+        obj = Student.objects.filter(student_id=student_id, created_by=user).first()
         # check of course exists
         if obj is None:
             return Response({
-                "message": "Course Fot Found"
+                "message": "Student Not Found"
             }, status=status.HTTP_404_NOT_FOUND)
         else:
             obj.delete()
             return Response({
-                "message": "Course Deleted Successfully",
+                "message": "Student Deleted Successfully",
             }, status=status.HTTP_200_OK)
