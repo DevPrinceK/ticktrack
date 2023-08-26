@@ -43,7 +43,7 @@ class Student(models.Model):
 
 class Course(models.Model):
     '''Model for creating and managing courses'''
-    course_code = models.CharField(max_length=4)
+    course_code = models.CharField(max_length=7)
     course_name = models.CharField(max_length=200)
     lecturer = models.ForeignKey(User, on_delete=models.CASCADE)
     students = models.ManyToManyField(Student, related_name="studnets")
