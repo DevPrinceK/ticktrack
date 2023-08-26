@@ -13,7 +13,6 @@ class UserSerializer(serializers.ModelSerializer):
         exclude = ('password', 'is_superuser', 'groups', 'user_permissions', 'last_login', 'id')  # noqa
 
 
-
 class LoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -45,4 +44,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
+        fields = '__all__'
+
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
         fields = '__all__'
