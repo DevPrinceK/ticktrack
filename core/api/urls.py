@@ -18,4 +18,5 @@ urlpatterns = [
 # others
 urlpatterns += [
     path("courses/", views.CRUDCourse.as_view(), name="courses"),
+    path("students/", views.CRUDStudent.as_view(), name="students"),
 ]
