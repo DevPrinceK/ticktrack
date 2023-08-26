@@ -5,6 +5,7 @@ from . import views
 
 app_name = "api"
 
+# authentication
 urlpatterns = [
     path("", views.OverviewAPI.as_view(), name="overview"),
     path("login/", views.LoginAPI.as_view(), name="login"),
@@ -12,4 +13,9 @@ urlpatterns = [
     path('logout/', knox_views.LogoutView.as_view(), name='logout'),
     # logout user from all sessions
     path('logoutall/', knox_views.LogoutAllView.as_view(), name='logoutall'),
+]
+
+# others
+urlpatterns += [
+    path("courses/", views.CRUDCourse.as_view(), name="courses"),
 ]
