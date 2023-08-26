@@ -35,6 +35,7 @@ class Student(models.Model):
     student_id = models.CharField(max_length=10)
     student_name = models.CharField(max_length=200)
     student_level = models.CharField(max_length=10)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -56,7 +57,6 @@ class Course(models.Model):
 class UniqueCode(models.Model):
     '''Models for generating and storing unique attendance codes'''
     
-    @staticmethod
     def generate_code() -> str:
         allowed_chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
         return get_random_string(length=5, allowed_chars=allowed_chars)
