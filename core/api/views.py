@@ -173,7 +173,7 @@ class CRUDStudent(APIView):
         '''Used to get all students created by user'''
         studnets = Student.objects.filter(created_by=request.user)
         return Response({
-            "studnets": StudentSerializer(studnets, many=True).data
+            "students": StudentSerializer(studnets, many=True).data
         }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
@@ -225,7 +225,12 @@ class CRUDStudent(APIView):
             "student": StudentSerializer(obj).data
         }, status=status.HTTP_200_OK)
         
-    def delete(self, request, *args, **kwargs):
+
+class DeleteStudentAPI(APIView):
+    '''Used to delete a student'''
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
         '''Used to delete a student'''
         user = request.user
         student_id = request.data.get("student_id")
@@ -240,6 +245,7 @@ class CRUDStudent(APIView):
             return Response({
                 "message": "Student Deleted Successfully",
             }, status=status.HTTP_200_OK)
+
 
 
 class CRUDCodeAPI(APIView):
