@@ -1,8 +1,8 @@
 # django
 from django.shortcuts import render
 from django.contrib.auth import login
-from api.models import Course, Student
-from api.serializers import CourseSerializer, StudentSerializer, UserSerializer
+from api.models import Course, Student, UniqueCode
+from api.serializers import CodesSerializer, CourseSerializer, StudentSerializer, UserSerializer
 
 # rest framework
 from rest_framework.views import APIView
@@ -27,6 +27,8 @@ class OverviewAPI(APIView):
                 {"endpoint": "/logout","description": "used to logout the current user from the current device"}, # noqa
                 {"endpoint": "/logoutall", "description": "used to logout current user from all devices"}, # noqa
                 {"endpoint": "/courses", "description": "Used to get, create, update and delete courses"}, # noqa
+                {"endpoint": "/students", "description": "Used to get, create, update and delete students"}, # noqa
+                {"endpoint": "/codes", "description": "Used to get, create, update and delete codes"}, # noqa
             ]
         })
 
@@ -125,15 +127,24 @@ class CRUDStudent(APIView):
 
     def post(self, request, *args, **kwargs):
         '''Used to create a new course'''
+        course_id = request.data.get("course_id")
         student_id = request.data.get("student_id")
         student_name = request.data.get("student_name")
         student_level = request.data.get("student_level")
+        course = Course.objects.filter(id=course_id, lecturer=request.user).first() # noqa
+        if course is None:
+            return Response({
+                "message": "Course Not Found"
+            }, status=status.HTTP_404_NOT_FOUND)
         obj = Student.objects.create(
             student_id=student_id,
             student_name=student_name,
             student_level=student_level,
             created_by=request.user
         )
+        # add student to course
+        course.students.add(obj)
+        
         return Response({
             "message": "Student Created Successfully",
             "student": StudentSerializer(obj).data
@@ -178,3 +189,74 @@ class CRUDStudent(APIView):
             return Response({
                 "message": "Student Deleted Successfully",
             }, status=status.HTTP_200_OK)
+
+
+class CRUDCodeAPI(APIView):
+    '''Used to create and get unique codes'''
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        '''Used to get all unique codes created by user'''
+        codes = UniqueCode.objects.filter(course__lecturer=request.user)
+        return Response({
+            "codes": CodesSerializer(codes, many=True).data
+        }, status=status.HTTP_200_OK)
+        
+    def post(self, request, *args, **kwargs):
+        # get user
+        user = request.user
+        # get course code, date and time
+        course_code = request.data.get("course_code")
+        valid_date = request.data.get("valid_date")
+        start_time = request.data.get("start_time")
+        end_time = request.data.get("end_time")
+        # get course
+        course = Course.objects.filter(lecturer=user, course_code=course_code).first() # noqa
+        # check if course exists
+        if course is None:
+            return Response({
+                "message": "Course Not Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        # get students
+        students = course.students.all()
+        if len(students) == 0:
+            return Response({
+                "message": "Add Students to Course First"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        unique_codes = []
+        # create unique codes
+        for student in students:
+            obj = UniqueCode(
+                course=course,
+                valid_date=valid_date,
+                start_time=start_time,
+                end_time=end_time
+            )
+            unique_codes.append(obj)
+        # save unique codes
+        UniqueCode.objects.bulk_create(unique_codes)
+        return Response({
+            "message": f"{len(unique_codes)} Codes Generated Successfully"
+        }, status=status.HTTP_201_CREATED)
+        # return unique codes
+        
+
+class TakeAttendanceAPI(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        student_id = request.data.get("student_id")
+        code = request.data.get("code")
+        attendance_code = UniqueCode.objects.filter(code=code).first()
+        if attendance_code is None:
+            return Response({
+                "message": "Code Not Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        course = attendance_code.course
+        # chceck if student is in course
+        student = Student.objects.filter(student_id=student_id, course=course).first() # noqa
+        if student is None:
+            return Response({
+                "message": "Student Not Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+       
