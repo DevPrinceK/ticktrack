@@ -19,4 +19,5 @@ urlpatterns = [
 urlpatterns += [
     path("courses/", views.CRUDCourse.as_view(), name="courses"),
     path("students/", views.CRUDStudent.as_view(), name="students"),
+    path("codes/", views.CRUDCodeAPI.as_view(), name="codes"),
 ]
