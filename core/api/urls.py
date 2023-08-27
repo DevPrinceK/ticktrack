@@ -18,6 +18,8 @@ urlpatterns = [
 # others
 urlpatterns += [
     path("courses/", views.CRUDCourse.as_view(), name="courses"),
+    path("delete-course/", views.DeleteCourseAPI.as_view(), name="delete_courses"),
+    path("delete-all-courses/", views.DeleteAllCoursesAPI.as_view(), name="delete_all_courses"),
     path("students/", views.CRUDStudent.as_view(), name="students"),
     path("codes/", views.CRUDCodeAPI.as_view(), name="codes"),
 ]
