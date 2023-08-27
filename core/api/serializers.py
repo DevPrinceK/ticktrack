@@ -51,3 +51,8 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__'
+
+class CodesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UniqueCode
+        fields = '__all__'
