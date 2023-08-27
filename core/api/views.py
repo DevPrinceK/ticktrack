@@ -27,6 +27,8 @@ class OverviewAPI(APIView):
                 {"endpoint": "/logout","description": "used to logout the current user from the current device"}, # noqa
                 {"endpoint": "/logoutall", "description": "used to logout current user from all devices"}, # noqa
                 {"endpoint": "/courses", "description": "Used to get, create, update and delete courses"}, # noqa
+                {"endpoint": "/delete-course", "description": "Used to delete courses"}, # noqa
+                {"endpoint": "/delete-all-course", "description": "Used to delete all courses"}, # noqa
                 {"endpoint": "/students", "description": "Used to get, create, update and delete students"}, # noqa
                 {"endpoint": "/codes", "description": "Used to get, create, update and delete codes"}, # noqa
             ]
@@ -66,6 +68,13 @@ class CRUDCourse(APIView):
         '''Used to create a new course'''
         course_code = request.data.get("course_code")
         course_name = request.data.get("course_name")
+        course = Course.objects.filter(course_code=course_code).first() # noqa
+        # check for duplicate course code
+        if course is not None:
+            return Response({
+                "message": "Course Code Already Exists"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        # create new course
         obj = Course.objects.create(
             course_code=course_code,
             course_name=course_name,
@@ -112,6 +121,48 @@ class CRUDCourse(APIView):
             obj.delete()
             return Response({
                 "message": "Course Deleted Successfully",
+            }, status=status.HTTP_200_OK)
+
+
+
+class DeleteCourseAPI(APIView):
+    '''Used to delete a course'''
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        '''Used to delete a course'''
+        user = request.user
+        course_id = request.data.get("course_id")
+        obj = Course.objects.filter(id=course_id, lecturer=user).first()
+        # check of course exists
+        if obj is None:
+            return Response({
+                "message": "Course Not Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        else:
+            obj.delete()
+            return Response({
+                "message": "Course Deleted Successfully",
+            }, status=status.HTTP_200_OK)
+
+
+class DeleteAllCoursesAPI(APIView):
+    '''Used to delete all courses'''
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        '''Used to delete all courses created by lecturer'''
+        user = request.user
+        courses = Course.objects.filter(lecturer=user)
+        # check of course exists
+        if len(courses) == 0:
+            return Response({
+                "message": "No Courses Found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        else:
+            courses.delete()
+            return Response({
+                "message": "Courses Deleted Successfully",
             }, status=status.HTTP_200_OK)
 
 
